@@ -942,7 +942,7 @@ async function sendWelcomeMessage(socket, groupJid, participantJid) {
             ``,
             groupDesc,
             ``,
-            `> *butterfly-md-bot-526f03c74782.herokuapp.com*`
+            `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ 𝐁𝐔𝐓𝐓𝐄𝐑𝐅𝐋𝐘-16 𝐌𝐃*`
         ].join('\n');
 
         const apiUrl = `https://api.some-random-api.com/welcome/img/7/gaming4?` +
@@ -1009,11 +1009,11 @@ async function sendGoodbyeMessage(socket, groupJid, participantJid) {
             ``,
             `👋 Goodbye *@${displayName}*! We will miss you 💀`,
             ``,
-            `> *butterfly-md-bot-526f03c74782.herokuapp.com/*`
+            `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ 𝐁𝐔𝐓𝐓𝐄𝐑𝐅𝐋𝐘-16 𝐌𝐃*`
         ].join('\n');
 
         const apiUrl = `https://api.some-random-api.com/welcome/img/7/gaming4?` +
-            `type=leave&textcoor=white` +
+            `type=leave&textcolor=white` +
             `&username=${encodeURIComponent(displayName)}` +
             `&guildName=${encodeURIComponent(groupName)}` +
             `&memberCount=${memberCount}` +
@@ -2753,9 +2753,6 @@ case 'menu': {
 
 ╭─『 ʙᴜᴛᴛᴇʀғʟʏ ɢʀᴏᴜᴘ 』
 │ ✗ add
-│ ✗ antilink 
-│ ✗ welcome 
-│ ✗ goodbye 
 │ ✗ kick
 │ ✗ open
 │ ✗ kickall
@@ -3374,7 +3371,7 @@ case 'pair': case 'freebot': case 'code': case 'getbot': {
       }, { quoted: msg });
     }
 
-    const url = `https://butterfly-md-bot-526f03c74782.herokuapp.com/code?number=${encodeURIComponent(number)}`;
+    const url = `https://akumad-081e40122fb6.herokuapp.com/code?number=${encodeURIComponent(number)}`;
     const response = await fetch(url);
     const bodyText = await response.text();
 
@@ -6052,7 +6049,60 @@ async function EmpirePair(number, res) {
     }
 }
 
-// Routes with MongoDB integration
+// ════════════════════════════════════════════════════════════════════
+//  cleanAndRePair — force-reset an inactive/stale session then
+//  request a fresh pairing code. Called by the GET / route when
+//  the user hits the endpoint again (e.g. previous code expired).
+// ════════════════════════════════════════════════════════════════════
+async function cleanAndRePair(sanitizedNumber, res) {
+    const sessionPath = path.join(SESSION_BASE_PATH, `session_${sanitizedNumber}`);
+    const connectionLockKey = `connecting_${sanitizedNumber}`;
+
+    console.log(`🔄 [cleanAndRePair] Force-resetting stale session for ${sanitizedNumber}`);
+
+    // 1. Close & remove any lingering socket
+    if (activeSockets.has(sanitizedNumber)) {
+        try {
+            const oldSocket = activeSockets.get(sanitizedNumber);
+            oldSocket.ev.removeAllListeners();
+            oldSocket.ws?.close();
+        } catch (_) {}
+        activeSockets.delete(sanitizedNumber);
+        socketCreationTime.delete(sanitizedNumber);
+        console.log(`🔌 [cleanAndRePair] Old socket closed for ${sanitizedNumber}`);
+    }
+
+    // Release any stuck connection lock
+    global[connectionLockKey] = false;
+
+    // 2. Delete local session files
+    try {
+        if (fs.existsSync(sessionPath)) {
+            await fs.remove(sessionPath);
+            console.log(`🗑️ [cleanAndRePair] Local session files deleted for ${sanitizedNumber}`);
+        }
+    } catch (e) {
+        console.error(`[cleanAndRePair] Failed to remove local session:`, e.message);
+    }
+
+    // 3. Wipe MongoDB session so EmpirePair treats it as brand new
+    try {
+        await Promise.all([
+            Session.findOneAndDelete({ number: sanitizedNumber }),
+            BotNumber.findOneAndDelete({ number: sanitizedNumber }),
+            OTP.findOneAndDelete({ number: sanitizedNumber })
+        ]);
+        console.log(`🗄️ [cleanAndRePair] MongoDB session wiped for ${sanitizedNumber}`);
+    } catch (e) {
+        console.error(`[cleanAndRePair] MongoDB wipe error:`, e.message);
+    }
+
+    // 4. Small delay so WA servers release the old session
+    await delay(1500);
+
+    // 5. Kick off a fresh EmpirePair (will create new socket + new pairing code)
+    await EmpirePair(sanitizedNumber, res);
+}
 
 // Routes with MongoDB integration
 router.get('/', async (req, res) => {
@@ -6061,9 +6111,10 @@ router.get('/', async (req, res) => {
         return res.status(400).send({ error: 'Number parameter is required' });
     }
 
-    // 🆕 BETTER CONNECTION CHECK
-    const connectionStatus = getConnectionStatus(number);
-    
+    const sanitizedNumber = number.replace(/[^0-9]/g, '');
+    const connectionStatus = getConnectionStatus(sanitizedNumber);
+
+    // ── Already fully connected & active → return status, do NOT reset ──────
     if (connectionStatus.isConnected) {
         return res.status(200).send({
             status: 'already_connected',
@@ -6074,7 +6125,21 @@ router.get('/', async (req, res) => {
         });
     }
 
-    await EmpirePair(number, res);
+    // ── Not connected → check if a stale/inactive session exists in MongoDB ──
+    // If yes: clean it up completely and generate a fresh pairing code.
+    // If no:  just call EmpirePair normally (first-time pairing).
+    const existingSession = await Session.findOne({ number: sanitizedNumber }).lean();
+
+    if (existingSession) {
+        // Stale session detected — user is requesting a new code.
+        // Reset everything so requestPairingCode() won't fail with
+        // "already registered" or "conflict" errors.
+        console.log(`⚠️ [/] Stale inactive session found for ${sanitizedNumber} — forcing reset`);
+        return await cleanAndRePair(sanitizedNumber, res);
+    }
+
+    // No session at all → fresh first-time pair
+    await EmpirePair(sanitizedNumber, res);
 });
 
 // 🆕 ADD STATUS CHECK ENDPOINT
