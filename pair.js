@@ -2113,6 +2113,7 @@ case 'alive': {
 │ Version: 2.0.0
 │ Respond Time: ${latency}ms
 ╰─────────────⊷
+but-2e1f3cdb41bf.herokuapp.com
 > Mᴀᴅᴇ ʙʏ Mᴇᴄ Iᴅᴇᴀʟ ᴍᴀɪɴ
 `;
 
@@ -2203,7 +2204,7 @@ case 'bot_stats': {
 │ Version: 2.0.0
 │ Platform: Node.js ${process.version}
 ╰──────────────
-
+but-2e1f3cdb41bf.herokuapp.com
 > ⚡ *System running flawlessly...*
 > 🧠 *Powered by Mᴇᴄ Iᴅᴇᴀʟ Main*
 `;
@@ -2387,6 +2388,7 @@ case 'allmenu': {
 │ ✧ Memory : ${usedMemory}MB / ${totalMemory}MB
 │ ✧ Dev : Mᴇᴄ Iᴅᴇᴀʟ
 ╰────────────❖
+but-2e1f3cdb41bf.herokuapp.com
 
 Ξ Select a category below:
 
@@ -2712,7 +2714,7 @@ case 'menu': {
 │ ✗ ᴄᴏᴍᴍᴀɴᴅs: ${count}
 │ ✗ ᴅᴇᴠ: Mᴇᴄ Iᴅᴇᴀʟ
 *╰───────────◇*
-
+but-2e1f3cdb41bf.herokuapp.com
 ╭───『 ʙᴜᴛᴛᴇʀғʟʏ ɢᴇɴᴇʀᴀʟ 』
 │ ✗ alive
 │ ✗ bot_stats
@@ -3959,8 +3961,8 @@ case 'script': {
     const repoMenu = `
 ╭─────────────────⊷*
 │ Bot Name : 𝐁𝐔𝐓𝐓𝐄𝐑𝐅𝐋𝐘-16 𝐌𝐃
-│ Website : https://butterfly-md-bot-526f03c74782.herokuapp.com
-│ Version : 2.0.0
+│ Website : but-2e1f3cdb41bf.herokuapp.com
+│ Version : 1.0.0
 │ Owner : Mᴇᴄ Iᴅᴇᴀʟ
 ╰─────────────────⊷*
 
@@ -3999,14 +4001,14 @@ case 'script': {
 case 'repo-visit': {
     await socket.sendMessage(sender, { react: { text: '🌐', key: msg.key } });
     await socket.sendMessage(sender, {
-        text: `🌐 *Click below to visit the Qᴜᴇᴇɴ Aᴋᴜᴍᴀ V2:*\n👉 https://butterfly-md-bot-526f03c74782.herokuapp.com`,
+        text: `🌐 *Click below to visit the Qᴜᴇᴇɴ Aᴋᴜᴍᴀ V2:*\n👉 but-2e1f3cdb41bf.herokuapp.com`,
         contextInfo: {
             externalAdReply: {
                 title: 'Mᴀᴅᴇ ʙʏ Mᴇᴄ Iᴅᴇᴀʟ',
                 body: '𝐁𝐔𝐓𝐓𝐄𝐑𝐅𝐋𝐘-16 𝐌𝐃',
                 mediaType: 1,
-                mediaUrl: 'https://butterfly-md-bot-526f03c74782.herokuapp.com',
-                sourceUrl: 'https://akumad-081e40122fb6.herokuapp.com'
+                mediaUrl: 'but-2e1f3cdb41bf.herokuapp.com',
+                sourceUrl: 'but-2e1f3cdb41bf.herokuapp.com'
             }
         }
     }, { quoted: myquoted });
@@ -4016,7 +4018,7 @@ case 'repo-visit': {
 case 'repo-owner': {
     await socket.sendMessage(sender, { react: { text: '👑', key: msg.key } });
     await socket.sendMessage(sender, {
-        text: `👑 *Visit the owner page:*\n👉 https://akumad-081e40122fb6.herokuapp.com`,
+        text: `👑 *Visit the owner page:*\n👉 but-2e1f3cdb41bf.herokuapp.com`,
         contextInfo: {
             externalAdReply: {
                 title: 'Owner Profile',
